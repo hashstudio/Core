@@ -5,6 +5,9 @@ namespace Modules\Core\Controllers;
 use Mindy\Base\Mindy;
 use Mindy\Controller\BaseController;
 use Mindy\Helper\Json;
+use Mindy\Orm\Manager;
+use Mindy\Orm\Model;
+use Mindy\Orm\QuerySet;
 use Mindy\Utils\RenderTrait;
 use Modules\User\Permissions\PermissionControlFilter;
 use Modules\User\Permissions\Rule;
@@ -95,5 +98,56 @@ class Controller extends BaseController
     public function accessDenied($rule = null)
     {
         $this->error(403);
+    }
+
+    public function getNextUrl()
+    {
+        if (isset($_POST['_next']) || isset($_GET['_next'])) {
+            if (isset($_POST['_next']) && !empty($_POST['_next'])) {
+                return $_POST['_next'];
+            } else if (isset($_GET['_next']) && !empty($_GET['_next'])) {
+                return $_GET['_next'];
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+
+    public function redirect($url, $data = null, $statusCode = 302)
+    {
+        $this->getRequest()->redirect($url, $data, $statusCode);
+    }
+
+    protected function redirectNext()
+    {
+        if ($url = $this->getNextUrl()) {
+            $this->redirect($url);
+        }
+    }
+
+    public function getOr404($object, $params = null)
+    {
+        if (!is_array($params)) {
+            $params = ['pk' => $params];
+        }
+
+        if (is_string($object)) {
+            $object = new $object;
+        }
+
+        $model = null;
+        if ($object instanceof Model) {
+            $model = $object->objects()->get($params);
+        } elseif ($object instanceof Manager || $object instanceof QuerySet) {
+            $model = $object->get($params);
+        }
+
+        if ($model === null) {
+            $this->error(404);
+        }
+
+        return $model;
     }
 }
