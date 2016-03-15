@@ -34,12 +34,17 @@ class SettingsController extends BackendController
     protected function reformatModels(array $moduleModels)
     {
         $models = [];
-        foreach ($moduleModels as $tmpModels) {
+        foreach ($moduleModels as $module => $tmpModels) {
             foreach ($tmpModels as $modelClass) {
                 $model = $modelClass::getInstance();
+                $classNameShort = $modelClass::classNameShort();
                 $models[$modelClass] = [
                     'model' => $model,
-                    'form' => new SettingsForm(['model' => $model, 'instance' => $model])
+                    'form' => new SettingsForm([
+                        'model' => $model,
+                        'instance' => $model,
+                        'key' => "{$module}_{$classNameShort}"
+                    ])
                 ];
             }
         }
@@ -56,12 +61,16 @@ class SettingsController extends BackendController
             $success = true;
             foreach ($models as $data) {
                 $form = $data['form'];
-                if (($form->populate($_POST, $_FILES)->isValid() && $form->save()) === false) {
+                if (($request->post->get('key') == $form->key) && ($form->populate($_POST, $_FILES)->isValid() && $form->save()) === false) {
                     $success = false;
                 }
             }
-            $request->flash->success(CoreModule::t($success ? 'Settings saved successfully' : 'Settings save fail'));
-            $request->refresh();
+            if ($success) {
+                $request->flash->success(CoreModule::t('Settings saved successfully'));
+                $request->refresh();
+            } else {
+                $request->flash->error(CoreModule::t('Settings save fail'));
+            }
         }
 
         echo $this->render('core/settings.html', [

@@ -42,4 +42,6 @@ return array (
   'Home' => 'Главная',
   'Core' => 'Ядро',
   'IP' => 'IP',
+    'Settings saved successfully' => 'Настройки сохранены',
+    'Settings save fail' => 'При сохранении настроек возникла ошибка'
 );

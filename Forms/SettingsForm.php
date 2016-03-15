@@ -20,6 +20,8 @@ class SettingsForm extends ModelForm
 {
     protected $model;
 
+    public $key;
+
     public function setModel(Model $model)
     {
         $this->model = $model;
